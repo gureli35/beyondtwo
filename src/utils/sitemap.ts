@@ -12,7 +12,7 @@ export interface SitemapTriggerOptions {
  */
 export const triggerSitemapRegeneration = async (options: SitemapTriggerOptions) => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
     
     // Sitemap API'sini çağırarak yeniden oluşturmasını sağla
     const response = await fetch(`${baseUrl}/api/sitemap.xml`, {
@@ -40,7 +40,7 @@ export const triggerSitemapRegeneration = async (options: SitemapTriggerOptions)
  */
 export const notifySearchEngines = async () => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
     const sitemapUrl = `${baseUrl}/api/sitemap.xml`;
 
     // Google'a ping gönder
@@ -50,7 +50,7 @@ export const notifySearchEngines = async () => {
     const bingPingUrl = `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
 
     // Production ortamında ping gönder
-    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_BASE_URL?.includes('beyond2c.org')) {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_BASE_URL?.includes('www.beyond2c.org')) {
       const promises = [
         fetch(googlePingUrl).catch(err => console.log('Google ping failed:', err.message)),
         fetch(bingPingUrl).catch(err => console.log('Bing ping failed:', err.message))

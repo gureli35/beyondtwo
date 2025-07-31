@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://beyond2c.org';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
     
     // Force regenerate sitemap by calling it with cache-busting
     const sitemapResponse = await axios.get(`${baseUrl}/api/sitemap.xml`, {

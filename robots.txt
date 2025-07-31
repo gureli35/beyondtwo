@@ -9,7 +9,7 @@ Allow: /data-hub/
 Allow: /impact-map/
 
 # Sitemap
-Sitemap: https://gureli35.github.io/beyond3c/api/sitemap.xml
+Sitemap: https://www.beyond2c.org/api/sitemap.xml
 
 # Disallow admin and private pages
 Disallow: /admin/
