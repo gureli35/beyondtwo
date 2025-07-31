@@ -1,0 +1,86 @@
+{
+  "name": "Beyond2C - İklim Eylem Platformu",
+  "short_name": "Beyond2C",
+  "description": "İklim krizi için harekete geçmek — çok geç olmadan önce. Z kuşağını yerel yönetimlerle buluşturan platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#2D7D46",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "tr-TR",
+  "dir": "ltr",
+  "categories": ["environment", "education", "social", "news"],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/images/screenshot-mobile.png", 
+      "sizes": "375x667",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/2Clogo.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Blog",
+      "short_name": "Blog",
+      "description": "İklim değişikliği hakkında güncel yazılar",
+      "url": "/blog",
+      "icons": [
+        {
+          "src": "/icons/blog-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Sesler",
+      "short_name": "Voices",
+      "description": "Gençlerin iklim hikayeleri",
+      "url": "/voices",
+      "icons": [
+        {
+          "src": "/icons/voices-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Harekete Geç",
+      "short_name": "Take Action",
+      "description": "İklim eylemine katıl",
+      "url": "/take-action",
+      "icons": [
+        {
+          "src": "/icons/action-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

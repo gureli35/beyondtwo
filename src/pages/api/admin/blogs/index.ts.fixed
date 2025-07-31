@@ -1,0 +1,172 @@
+import { NextApiResponse } from 'next';
+import connectDB from '@/lib/mongodb';
+import Post from '@/models/Post';
+import { AuthenticatedRequest } from '@/utils/auth';
+import { APIResponse, PaginatedResponse, IPost, CreatePostData } from '@/types/database';
+
+// Slug oluştur
+const createSlug = (title: string): string => {
+  // Remove accents, swap special characters
+  const from = "ğüşıöçĞÜŞİÖÇ";
+  const to   = "gusiocGUSIOC";
+
+  let str = title.toLowerCase().trim();
+  
+  // Replace special characters
+  for (let i = 0, l = from.length; i < l; i++) {
+    str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+  }
+
+  // Remove invalid chars, replace spaces with hyphens, collapse dashes
+  str = str.replace(/[^a-z0-9 -]/g, '')
+     .replace(/\s+/g, '-')
+     .replace(/-+/g, '-');
+
+  return str;
+};
+
+export default async function handler(
+  req: AuthenticatedRequest,
+  res: NextApiResponse<APIResponse<any> | PaginatedResponse<IPost>>
+) {
+  // Test aşamasında direkt olarak API'yi kullanıyoruz, auth kontrolünü geçici olarak kaldırdık
+  try {
+    await connectDB();
+
+    if (req.method === 'GET') {
+      try {
+        const {
+          page = 1,
+          limit = 10,
+          status,
+          category,
+          featured,
+          search,
+          sort = 'createdAt',
+          order = 'desc'
+        } = req.query;
+
+        const pageNum = parseInt(page as string);
+        const limitNum = parseInt(limit as string);
+        const skip = (pageNum - 1) * limitNum;
+
+        // Filter oluştur
+        const filter: any = {};
+
+        if (status) filter.status = status;
+        if (category && category !== 'all') filter.category = category;
+        if (featured === 'true') filter.featured = true;
+
+        // Arama
+        if (search) {
+          filter.$text = { $search: search as string };
+        }
+
+        // Sıralama
+        const sortOption: any = {};
+        sortOption[sort as string] = order === 'desc' ? -1 : 1;
+
+        const posts = await Post.find(filter)
+          .populate('author', 'username profilePicture firstName lastName')
+          .sort(sortOption)
+          .skip(skip)
+          .limit(limitNum)
+          .lean();
+
+        const total = await Post.countDocuments(filter);
+        const pages = Math.ceil(total / limitNum);
+
+        return res.status(200).json({
+          success: true,
+          data: posts,
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total,
+            pages,
+            hasNext: pageNum < pages,
+            hasPrev: pageNum > 1
+          }
+        });
+
+      } catch (error: any) {
+        console.error('Admin Posts GET error:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Sunucu hatası'
+        });
+      }
+    } else if (req.method === 'POST') {
+      // Yeni post oluştur
+      try {
+        const postData: CreatePostData = req.body;
+
+        if (!postData.title || !postData.content) {
+          return res.status(400).json({
+            success: false,
+            error: 'Başlık ve içerik gerekli'
+          });
+        }
+
+        // Slug oluştur
+        let slug = postData.slug || createSlug(postData.title);
+        
+        // Slug benzersizliğini kontrol et
+        const existingPost = await Post.findOne({ slug });
+        if (existingPost) {
+          slug = `${slug}-${Date.now()}`;
+        }
+
+        // Geçici olarak test için sabit userId kullanıyoruz
+        // Gerçek uygulamada bu değer req.user.userId'den gelmelidir
+        const userId = "647d861afa4570b8a2299891"; // Örnek bir ID
+        
+        // Process tags
+        let tagsArray: string[] = [];
+        if (postData.tags) {
+          if (Array.isArray(postData.tags)) {
+            tagsArray = postData.tags;
+          } else if (typeof postData.tags === 'string') {
+            tagsArray = (postData.tags as string).split(',').map((tag: string) => tag.trim());
+          }
+        }
+        
+        const newPost = new Post({
+          ...postData,
+          slug,
+          userId: userId,
+          tags: tagsArray
+        });
+
+        await newPost.save();
+        
+        const populatedPost = await Post.findById(newPost._id)
+          .populate('author', 'username profilePicture firstName lastName');
+
+        return res.status(201).json({
+          success: true,
+          data: populatedPost,
+          message: 'Blog yazısı başarıyla oluşturuldu'
+        });
+
+      } catch (error: any) {
+        console.error('Admin Post create error:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Sunucu hatası: ' + error.message
+        });
+      }
+    } else {
+      return res.status(405).json({
+        success: false,
+        error: 'Method not allowed'
+      });
+    }
+  } catch (error) {
+    console.error('API error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Sunucu hatası'
+    });
+  }
+}

@@ -1,0 +1,311 @@
+import React, { useState, useEffect } from 'react';
+import Layout from '@/components/Layout';
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
+import { useLanguage } from '@/context/LanguageContext';
+
+// Helper function for consistent date formatting
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
+interface BlogPost {
+  _id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: {
+    firstName: string;
+    lastName: string;
+    username: string;
+  };
+  publishedAt: string;
+  featuredImage?: string;
+  category: string;
+  tags: string[];
+  featured: boolean;
+  slug: string;
+  readingTime: number;
+  views: number;
+}
+
+const BlogPage: React.FC = () => {
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [totalPosts, setTotalPosts] = useState<number>(0);
+  const { t } = useLanguage();
+  const postsPerPage = 6;
+
+  // Fetch blog posts from API
+  const fetchBlogPosts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/posts?page=${currentPage}&limit=${postsPerPage}&status=published`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setBlogPosts(data.data);
+        setTotalPosts(data.pagination.total);
+      }
+    } catch (error) {
+      console.error('Blog posts fetch error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogPosts();
+  }, [currentPage]);
+
+  // Categories for filtering
+  const categories = [
+    { value: 'all', label: 'Tüm Kategoriler' },
+    { value: 'technology', label: 'Teknoloji' },
+    { value: 'business', label: 'İş Dünyası' },
+    { value: 'lifestyle', label: 'Yaşam Tarzı' },
+    { value: 'education', label: 'Eğitim' },
+    { value: 'health', label: 'Sağlık' },
+    { value: 'travel', label: 'Seyahat' },
+    { value: 'environment', label: 'Çevre' },
+    { value: 'climate', label: 'İklim' },
+    { value: 'sustainability', label: 'Sürdürülebilirlik' },
+  ];
+
+  // Filter posts based on category and search
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesCategory = activeCategory === 'all' || post.category === activeCategory;
+    const matchesSearch = searchQuery === '' || 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return matchesCategory && matchesSearch;
+  });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+        {/* Hero Section */}
+        <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-green-600/10"></div>
+          <div className="relative max-w-7xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+              Beyond2C 
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
+                Blog
+              </span>
+            </h1>
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+              İklim değişikliği, sürdürülebilirlik ve çevre konularında güncel yazılar, 
+              araştırmalar ve uzman görüşleri
+            </p>
+          </div>
+        </section>
+
+        {/* Search and Filter Section */}
+        <section className="py-8 px-4 sm:px-6 lg:px-8 bg-white/50 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-6 items-center">
+              {/* Search Bar */}
+              <div className="flex-1 w-full max-w-md">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Blog yazılarında ara..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Filter */}
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category.value}
+                    onClick={() => setActiveCategory(category.value)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      activeCategory === category.value
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Blog Posts Grid */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+                    <div className="h-48 bg-gray-300"></div>
+                    <div className="p-6">
+                      <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-300 rounded mb-4 w-3/4"></div>
+                      <div className="h-3 bg-gray-300 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded mb-4 w-2/3"></div>
+                      <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredPosts.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">📝</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Henüz blog yazısı bulunmuyor</h3>
+                <p className="text-gray-600">Yakında ilginç içeriklerle karşınızda olacağız!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredPosts.map((post) => (
+                  <article
+                    key={post._id}
+                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  >
+                    {/* Featured Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={post.featuredImage || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80'}
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                      />
+                      {post.featured && (
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-medium">
+                            ⭐ Öne Çıkan
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute top-4 right-4">
+                        <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                          {post.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
+                        <Link href={`/blog/${post.slug}`}>
+                          {post.title}
+                        </Link>
+                      </h2>
+                      
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {post.tags.slice(0, 3).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Meta Info */}
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <div className="flex items-center space-x-4">
+                          <span>👤 {post.author.firstName} {post.author.lastName}</span>
+                          <span>📅 {formatDate(post.publishedAt)}</span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <span>⏱️ {post.readingTime} dk</span>
+                          <span>👁️ {post.views}</span>
+                        </div>
+                      </div>
+
+                      {/* Read More Button */}
+                      <Link href={`/blog/${post.slug}`}>
+                        <Button
+                          variant="outline"
+                          className="w-full group"
+                        >
+                          Devamını Oku
+                          <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-12">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Önceki
+                </button>
+                
+                {[...Array(totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  if (page === currentPage || page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-4 py-2 text-sm font-medium rounded-md ${
+                          page === currentPage
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return <span key={page} className="text-gray-400">...</span>;
+                  }
+                  return null;
+                })}
+                
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sonraki
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </Layout>
+  );
+};
+
+export default BlogPage;
