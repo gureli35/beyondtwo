@@ -15,7 +15,7 @@ const Partners: React.FC = () => {
   const partners: Partner[] = [
     {
       name: 'BeVisioneers',
-      logo: `${process.env.NODE_ENV === 'production' ? '/beyond3c' : ''}/images/beVisioneers_Logo_Subline_sRGB_neg.png`,
+      logo: '/images/beVisioneers_Logo_Subline_sRGB_neg.png',
       url: 'https://bevisioneers.world',
       type: 'corporate',
     },
