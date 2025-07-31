@@ -183,7 +183,7 @@ const VoicesPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      <Link href={`/blog/${post.slug}`} className="inline-block w-full text-center bg-gradient-to-r from-primary-500 to-red-600 text-white px-6 py-3 rounded-lg font-bold uppercase text-sm tracking-wider hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:scale-105">
+                      <Link href={`/voices/${post.slug}`} className="inline-block w-full text-center bg-gradient-to-r from-primary-500 to-red-600 text-white px-6 py-3 rounded-lg font-bold uppercase text-sm tracking-wider hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:scale-105">
                         {language === 'tr' ? 'Hikayeyi Oku' : 'Read Story'}
                       </Link>
                     </div>

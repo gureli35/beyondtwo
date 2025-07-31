@@ -4,84 +4,15 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Layout from '@/components/Layout';
 import { useLanguage } from '@/context/LanguageContext';
-import connectDB from '@/lib/mongodb';
-import Voice from '@/models/Voice';
+import { TransformedPost } from '@/hooks/useWordPressPosts';
 
 interface VoicePageProps {
-  voice: {
-    _id: string;
-    title: string;
-    content: string;
-    excerpt?: string;
-    slug: string;
-    featuredImage?: string;
-    author: {
-      name: string;
-      age?: number;
-      location: {
-        city?: string;
-        region?: string;
-        country?: string;
-      };
-      bio?: string;
-      image?: string;
-    };
-    category: string;
-    tags: string[];
-    status: string;
-    featured: boolean;
-    storyType: string;
-    impact?: {
-      description?: string;
-      metrics?: Array<{
-        name: string;
-        value: string;
-        unit: string;
-      }>;
-      beneficiaries?: number;
-      timeframe?: string;
-    };
-    callToAction?: string;
-    contact?: {
-      email?: string;
-      phone?: string;
-      website?: string;
-      social?: {
-        instagram?: string;
-        twitter?: string;
-        linkedin?: string;
-        youtube?: string;
-      };
-    };
-    views: number;
-    likes: number;
-    shares: number;
-    readingTime: number;
-    publishedAt: string;
-    createdAt: string;
-    showAuthorContact: boolean;
-  };
-  relatedVoices: Array<{
-    _id: string;
-    title: string;
-    excerpt?: string;
-    slug: string;
-    featuredImage?: string;
-    author: {
-      name: string;
-      location: {
-        city?: string;
-        country?: string;
-      };
-    };
-    category: string;
-    readingTime: number;
-    publishedAt: string;
-  }>;
+  voice: TransformedPost;
+  relatedVoices: TransformedPost[];
 }
 
 const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
@@ -91,19 +22,18 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
     });
   };
 
-  const getStoryTypeLabel = (type: string) => {
-    const labels = {
-      personal: language === 'tr' ? 'Kişisel Deneyim' : 'Personal Experience',
-      community: language === 'tr' ? 'Topluluk Projesi' : 'Community Project',
-      project: language === 'tr' ? 'Proje Deneyimi' : 'Project Experience',
-      campaign: language === 'tr' ? 'Kampanya' : 'Campaign',
-      research: language === 'tr' ? 'Araştırma' : 'Research'
-    };
-    return labels[type as keyof typeof labels] || type;
+  // Calculate reading time (roughly 200 words per minute)
+  const calculateReadingTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+    return Math.ceil(words / wordsPerMinute);
   };
+
+  const readingTime = calculateReadingTime(voice.content);
 
   const getCategoryLabel = (category: string) => {
     const labels = {
+      Voices: language === 'tr' ? 'Gençlik Sesleri' : 'Youth Voices',
       Youth: language === 'tr' ? 'Gençlik' : 'Youth',
       Energy: language === 'tr' ? 'Enerji' : 'Energy',
       Transportation: language === 'tr' ? 'Ulaşım' : 'Transportation',
@@ -132,20 +62,31 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-900 via-secondary-800 to-black text-white section-padding relative overflow-hidden">
         <div className="absolute inset-0 bg-pattern opacity-10"></div>
+        
+        {/* Background decoration */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-primary-500/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-20 right-10 w-48 h-48 bg-red-500/10 rounded-full blur-xl"></div>
+        </div>
+        
         <div className="container-custom relative z-10">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             {/* Breadcrumbs */}
             <nav className="flex mb-8" aria-label="Breadcrumb">
-              <ol className="inline-flex items-center space-x-1 md:space-x-3">
+              <ol className="inline-flex items-center space-x-1 md:space-x-3 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full border border-primary-500/30">
                 <li className="inline-flex items-center">
-                  <Link href="/" className="text-primary-300 hover:text-white">
+                  <Link href="/" className="text-primary-300 hover:text-white transition-colors flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                    </svg>
                     {language === 'tr' ? 'Ana Sayfa' : 'Home'}
                   </Link>
                 </li>
                 <li>
                   <div className="flex items-center">
                     <span className="mx-2 text-primary-300">/</span>
-                    <Link href="/voices" className="text-primary-300 hover:text-white">
+                    <Link href="/voices" className="text-primary-300 hover:text-white transition-colors flex items-center gap-1">
+                      <span>🎤</span>
                       {language === 'tr' ? 'Gençlik Sesleri' : 'Youth Voices'}
                     </Link>
                   </div>
@@ -153,7 +94,7 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
                 <li aria-current="page">
                   <div className="flex items-center">
                     <span className="mx-2 text-primary-300">/</span>
-                    <span className="text-white">{voice.title}</span>
+                    <span className="text-white font-medium">{voice.title.length > 30 ? voice.title.substring(0, 30) + '...' : voice.title}</span>
                   </div>
                 </li>
               </ol>
@@ -161,73 +102,60 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
 
             {/* Article Header */}
             <div className="text-center">
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <span className="bg-primary-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  {getCategoryLabel(voice.category)}
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <span className="bg-gradient-to-r from-primary-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider shadow-lg">
+                  <div className="flex items-center space-x-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span>{getCategoryLabel(voice.category)}</span>
+                  </div>
                 </span>
-                <span className="bg-accent-500 text-black px-3 py-1 rounded-full text-sm font-medium">
-                  {getStoryTypeLabel(voice.storyType)}
+                <span className="bg-black/70 backdrop-blur-sm text-accent-500 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider border border-accent-500/30">
+                  🎤 {language === 'tr' ? 'Gençlik Hikayesi' : 'Youth Story'}
                 </span>
-                {voice.featured && (
-                  <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-medium">
-                    ⭐ {language === 'tr' ? 'Öne Çıkan' : 'Featured'}
-                  </span>
-                )}
               </div>
 
-              <h1 className="font-montserrat font-black text-4xl md:text-6xl mb-6 text-shadow leading-tight">
-                {voice.title}
+              <h1 className="font-montserrat font-black text-4xl md:text-6xl lg:text-7xl mb-8 text-shadow-red leading-tight tracking-tight">
+                <span className="bg-gradient-to-r from-white via-primary-100 to-accent-500 bg-clip-text text-transparent">
+                  {voice.title}
+                </span>
               </h1>
 
               {voice.excerpt && (
-                <p className="text-xl text-primary-100 mb-8 max-w-3xl mx-auto">
-                  {voice.excerpt}
-                </p>
+                <div className="bg-black/40 backdrop-blur-sm p-6 rounded-2xl border border-primary-500/30 mb-8 max-w-4xl mx-auto">
+                  <p className="text-xl md:text-2xl text-primary-100 leading-relaxed">
+                    {voice.excerpt.replace(/<[^>]*>/g, '')}
+                  </p>
+                </div>
               )}
 
               {/* Author Info */}
-              <div className="flex items-center justify-center gap-6 text-primary-200">
-                <div className="flex items-center gap-3">
-                  {voice.author.image ? (
-                    <img
-                      src={voice.author.image}
-                      alt={voice.author.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-primary-300"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">
-                        {voice.author.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="text-left">
-                    <p className="font-semibold text-white">{voice.author.name}</p>
-                    {voice.author.age && (
-                      <p className="text-sm">{voice.author.age} {language === 'tr' ? 'yaşında' : 'years old'}</p>
-                    )}
-                  </div>
-                </div>
-
-                {voice.author.location.city && (
-                  <div className="flex items-center gap-1">
-                    <span>📍</span>
-                    <span>
-                      {voice.author.location.city}
-                      {voice.author.location.region && `, ${voice.author.location.region}`}
-                      {voice.author.location.country && `, ${voice.author.location.country}`}
+              <div className="flex items-center justify-center gap-8 text-primary-200 flex-wrap mt-8">
+                <div className="flex items-center gap-4 bg-black/30 backdrop-blur-sm px-6 py-3 rounded-full border border-primary-500/30">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-r from-primary-500 to-red-600 flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-xl">
+                      {voice.author.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                )}
-
-                <div className="flex items-center gap-1">
-                  <span>📅</span>
-                  <span>{formatDate(voice.publishedAt)}</span>
+                  <div className="text-left">
+                    <p className="font-bold text-white text-lg">{voice.author.name}</p>
+                    <p className="text-primary-300 text-sm">{language === 'tr' ? 'Yazar' : 'Author'}</p>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <span>⏱️</span>
-                  <span>{voice.readingTime} {language === 'tr' ? 'dk okuma' : 'min read'}</span>
+                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-4 py-3 rounded-full border border-primary-500/30">
+                  <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-white font-medium">{formatDate(voice.publishedAt)}</span>
+                </div>
+
+                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-4 py-3 rounded-full border border-primary-500/30">
+                  <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-white font-medium">{readingTime} {language === 'tr' ? 'dk okuma' : 'min read'}</span>
                 </div>
               </div>
             </div>
@@ -238,12 +166,22 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
       {/* Featured Image */}
       {voice.featuredImage && (
         <section className="relative">
-          <div className="h-96 bg-gray-900 overflow-hidden">
+          <div className="h-96 md:h-[500px] lg:h-[600px] bg-gray-900 overflow-hidden relative">
             <img
               src={voice.featuredImage}
               alt={voice.title}
               className="w-full h-full object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+            
+            {/* Floating elements */}
+            <div className="absolute bottom-6 left-6 right-6">
+              <div className="bg-black/60 backdrop-blur-sm p-4 rounded-xl border border-primary-500/30 max-w-md">
+                <p className="text-white font-medium text-sm">
+                  📸 {language === 'tr' ? 'Hikaye Görseli' : 'Story Image'}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -254,140 +192,13 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
           <div className="max-w-4xl mx-auto">
             <div className="prose prose-lg max-w-none prose-invert prose-primary">
               <div 
-                className="content text-accent-500"
+                className="content text-gray-300"
                 dangerouslySetInnerHTML={{ __html: voice.content }}
                 style={{
-                  color: '#F39C12',
+                  lineHeight: '1.8',
                 }}
               />
             </div>
-
-            {/* Author Bio */}
-            {voice.author.bio && (
-              <div className="mt-12 p-6 bg-secondary-800 border-l-4 border-primary-500 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-white">
-                  {language === 'tr' ? 'Yazar Hakkında' : 'About the Author'}
-                </h3>
-                <div className="flex items-start gap-4">
-                  {voice.author.image ? (
-                    <img
-                      src={voice.author.image}
-                      alt={voice.author.name}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-primary-300"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-xl">
-                        {voice.author.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="font-semibold text-lg text-white">{voice.author.name}</h4>
-                    <p className="text-gray-300 mt-2">{voice.author.bio}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Impact Section */}
-            {voice.impact?.description && (
-              <div className="mt-12 p-6 bg-secondary-700 border-l-4 border-accent-500 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-accent-500">
-                  {language === 'tr' ? 'Etki ve Sonuçlar' : 'Impact & Results'}
-                </h3>
-                <p className="text-gray-300 mb-4">{voice.impact.description}</p>
-
-                {voice.impact.metrics && voice.impact.metrics.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    {voice.impact.metrics.map((metric, index) => (
-                      <div key={index} className="bg-secondary-900 p-4 text-center border border-secondary-600">
-                        <div className="text-2xl font-bold text-accent-500">
-                          {metric.value} {metric.unit}
-                        </div>
-                        <div className="text-sm text-gray-400">{metric.name}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {voice.impact.beneficiaries && (
-                  <div className="mt-4 text-gray-300">
-                    <strong className="text-accent-500">{language === 'tr' ? 'Faydalanıcılar:' : 'Beneficiaries:'}</strong> {voice.impact.beneficiaries} {language === 'tr' ? 'kişi' : 'people'}
-                  </div>
-                )}
-
-                {voice.impact.timeframe && (
-                  <div className="mt-2 text-gray-300">
-                    <strong className="text-accent-500">{language === 'tr' ? 'Zaman Çerçevesi:' : 'Timeframe:'}</strong> {voice.impact.timeframe}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Call to Action */}
-            {voice.callToAction && (
-              <div className="mt-12 p-6 bg-secondary-800 border-l-4 border-primary-500 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-primary-300">
-                  {language === 'tr' ? 'Harekete Geç' : 'Take Action'}
-                </h3>
-                <p className="text-gray-300">{voice.callToAction}</p>
-              </div>
-            )}
-
-            {/* Contact Info */}
-            {voice.showAuthorContact && voice.contact && (
-              <div className="mt-12 p-6 bg-secondary-700 border border-secondary-600 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-white">
-                  {language === 'tr' ? 'İletişim' : 'Contact'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {voice.contact.email && (
-                    <div className="flex items-center gap-2">
-                      <span>📧</span>
-                      <a href={`mailto:${voice.contact.email}`} className="text-primary-300 hover:text-primary-500 transition-colors">
-                        {voice.contact.email}
-                      </a>
-                    </div>
-                  )}
-                  {voice.contact.phone && (
-                    <div className="flex items-center gap-2">
-                      <span>📞</span>
-                      <a href={`tel:${voice.contact.phone}`} className="text-primary-300 hover:text-primary-500 transition-colors">
-                        {voice.contact.phone}
-                      </a>
-                    </div>
-                  )}
-                  {voice.contact.website && (
-                    <div className="flex items-center gap-2">
-                      <span>🌐</span>
-                      <a href={voice.contact.website} target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:text-primary-500 transition-colors">
-                        {voice.contact.website}
-                      </a>
-                    </div>
-                  )}
-                  {voice.contact.social && (
-                    <div className="flex items-center gap-4">
-                      {voice.contact.social.instagram && (
-                        <a href={voice.contact.social.instagram} target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:text-primary-500 transition-colors">
-                          📷 Instagram
-                        </a>
-                      )}
-                      {voice.contact.social.twitter && (
-                        <a href={voice.contact.social.twitter} target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:text-primary-500 transition-colors">
-                          🐦 Twitter
-                        </a>
-                      )}
-                      {voice.contact.social.linkedin && (
-                        <a href={voice.contact.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:text-primary-500 transition-colors">
-                          💼 LinkedIn
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Tags */}
             {voice.tags.length > 0 && (
@@ -473,7 +284,7 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
                         )}
                         <div className="flex items-center justify-between text-xs text-gray-400 mt-auto">
                           <span className="text-accent-500">{relatedVoice.author.name}</span>
-                          <span>{relatedVoice.readingTime} {language === 'tr' ? 'dk' : 'min'}</span>
+                          <span>{calculateReadingTime(relatedVoice.content)} {language === 'tr' ? 'dk' : 'min'}</span>
                         </div>
                       </div>
                     </div>
@@ -490,14 +301,36 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   try {
-    await connectDB();
-    const voices = await Voice.find({ status: 'published' }, 'slug').lean();
+    // Fetch WordPress posts to get slugs for voices category
+    const response = await fetch('https://public-api.wordpress.com/rest/v1.1/sites/beyond2capi.wordpress.com/posts');
     
-    const paths = voices.map((voice: any) => ({
-      params: { slug: voice.slug }
-    }));
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.posts) {
+      // Filter only voices category posts
+      const voicesPosts = data.posts.filter((post: any) => {
+        if (post.categories && typeof post.categories === 'object') {
+          const categoryValues = Object.values(post.categories);
+          if (categoryValues.length > 0 && categoryValues[0] && typeof categoryValues[0] === 'object') {
+            const firstCategory = categoryValues[0] as any;
+            return firstCategory.name && firstCategory.name.toLowerCase() === 'voices';
+          }
+        }
+        return false;
+      });
 
-    return { paths, fallback: 'blocking' };
+      const paths = voicesPosts.map((post: any) => ({
+        params: { slug: post.slug }
+      }));
+
+      return { paths, fallback: 'blocking' };
+    }
+
+    return { paths: [], fallback: 'blocking' };
   } catch (error) {
     console.error('Error generating static paths:', error);
     return { paths: [], fallback: 'blocking' };
@@ -506,31 +339,105 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   try {
-    await connectDB();
+    // Fetch WordPress posts
+    const response = await fetch('https://public-api.wordpress.com/rest/v1.1/sites/beyond2capi.wordpress.com/posts');
     
-    const voice = await Voice.findOne({ 
-      slug: params?.slug,
-      status: 'published'
-    }).lean();
-
-    if (!voice) {
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data || !data.posts) {
       return { notFound: true };
     }
 
-    // Get related voices (same category, excluding current voice)
-    const relatedVoices = await Voice.find({
-      _id: { $ne: (voice as any)._id },
-      category: (voice as any).category,
-      status: 'published'
-    })
-    .select('title excerpt slug featuredImage author category readingTime publishedAt')
-    .limit(3)
-    .lean();
+    // Find the specific post by slug
+    const foundPost = data.posts.find((post: any) => post.slug === params?.slug);
+    
+    if (!foundPost) {
+      return { notFound: true };
+    }
+
+    // Check if this post is in voices category
+    let isVoicesCategory = false;
+    if (foundPost.categories && typeof foundPost.categories === 'object') {
+      const categoryValues = Object.values(foundPost.categories);
+      if (categoryValues.length > 0 && categoryValues[0] && typeof categoryValues[0] === 'object') {
+        const firstCategory = categoryValues[0] as any;
+        isVoicesCategory = firstCategory.name && firstCategory.name.toLowerCase() === 'voices';
+      }
+    }
+
+    if (!isVoicesCategory) {
+      return { notFound: true };
+    }
+
+    // Transform the post to match our app's structure
+    const transformPost = (post: any): TransformedPost => {
+      // Extract category name safely
+      let categoryName = 'Voices';
+      if (post.categories && typeof post.categories === 'object') {
+        const categoryValues = Object.values(post.categories);
+        if (categoryValues.length > 0 && categoryValues[0] && typeof categoryValues[0] === 'object') {
+          const firstCategory = categoryValues[0] as any;
+          categoryName = firstCategory.name || 'Voices';
+        }
+      }
+      
+      // Extract tags safely
+      const tagsList: string[] = [];
+      if (post.tags && typeof post.tags === 'object') {
+        Object.values(post.tags).forEach((tag: any) => {
+          if (tag && typeof tag === 'object' && tag.name) {
+            tagsList.push(tag.name);
+          }
+        });
+      }
+
+      return {
+        _id: post.ID.toString(),
+        title: post.title || '',
+        excerpt: post.excerpt || '',
+        content: post.content || '',
+        author: {
+          name: post.author ? post.author.name : 'Beyond2C'
+        },
+        publishedAt: post.date || new Date().toISOString(),
+        image: post.featured_image || '',
+        featuredImage: post.featured_image || '',
+        images: [],
+        category: categoryName,
+        tags: tagsList,
+        slug: post.slug || '',
+      };
+    };
+
+    const voice = transformPost(foundPost);
+
+    // Get related voices (other posts in voices category, excluding current post)
+    const relatedPosts = data.posts
+      .filter((post: any) => {
+        // Exclude current post
+        if (post.slug === params?.slug) return false;
+        
+        // Check if it's in voices category
+        if (post.categories && typeof post.categories === 'object') {
+          const categoryValues = Object.values(post.categories);
+          if (categoryValues.length > 0 && categoryValues[0] && typeof categoryValues[0] === 'object') {
+            const firstCategory = categoryValues[0] as any;
+            return firstCategory.name && firstCategory.name.toLowerCase() === 'voices';
+          }
+        }
+        return false;
+      })
+      .slice(0, 3) // Limit to 3 related posts
+      .map(transformPost);
 
     return {
       props: {
-        voice: JSON.parse(JSON.stringify(voice)),
-        relatedVoices: JSON.parse(JSON.stringify(relatedVoices)),
+        voice,
+        relatedVoices: relatedPosts,
       },
       revalidate: 3600, // Revalidate every hour
     };

@@ -130,7 +130,7 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
       </Head>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-900 via-secondary-800 to-black text-white section-padding relative overflow-hidden">
+      <section className="hero-gradient text-white section-padding relative overflow-hidden">
         <div className="absolute inset-0 bg-pattern opacity-10"></div>
         <div className="container-custom relative z-10">
           <div className="max-w-4xl mx-auto">
@@ -138,14 +138,14 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
             <nav className="flex mb-8" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-3">
                 <li className="inline-flex items-center">
-                  <Link href="/" className="text-primary-300 hover:text-white">
+                  <Link href="/" className="text-primary-300 hover:text-primary-500 transition-colors">
                     {language === 'tr' ? 'Ana Sayfa' : 'Home'}
                   </Link>
                 </li>
                 <li>
                   <div className="flex items-center">
                     <span className="mx-2 text-primary-300">/</span>
-                    <Link href="/voices" className="text-primary-300 hover:text-white">
+                    <Link href="/voices" className="text-primary-300 hover:text-primary-500 transition-colors">
                       {language === 'tr' ? 'Gençlik Sesleri' : 'Youth Voices'}
                     </Link>
                   </div>
@@ -161,58 +161,58 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
 
             {/* Article Header */}
             <div className="text-center">
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <span className="bg-primary-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              <div className="flex items-center justify-center gap-4 mb-6 flex-wrap">
+                <span className="propaganda-box bg-primary-500 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider">
                   {getCategoryLabel(voice.category)}
                 </span>
-                <span className="bg-accent-500 text-black px-3 py-1 rounded-full text-sm font-medium">
+                <span className="propaganda-box bg-accent-500 text-black px-4 py-2 text-sm font-bold uppercase tracking-wider">
                   {getStoryTypeLabel(voice.storyType)}
                 </span>
                 {voice.featured && (
-                  <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-medium">
-                    ⭐ {language === 'tr' ? 'Öne Çıkan' : 'Featured'}
+                  <span className="propaganda-box bg-yellow-500 text-black px-4 py-2 text-sm font-bold uppercase tracking-wider">
+                    ⭐ {language === 'tr' ? 'ÖZELGEÇEN' : 'FEATURED'}
                   </span>
                 )}
               </div>
 
-              <h1 className="font-montserrat font-black text-4xl md:text-6xl mb-6 text-shadow leading-tight">
+              <h1 className="font-montserrat font-black text-4xl md:text-6xl mb-6 text-shadow-red leading-tight uppercase tracking-tight text-white">
                 {voice.title}
               </h1>
 
               {voice.excerpt && (
-                <p className="text-xl text-primary-100 mb-8 max-w-3xl mx-auto">
+                <p className="text-xl text-white mb-8 max-w-3xl mx-auto font-medium diagonal-border">
                   {voice.excerpt}
                 </p>
               )}
 
               {/* Author Info */}
-              <div className="flex items-center justify-center gap-6 text-primary-200">
+              <div className="flex items-center justify-center gap-6 text-white flex-wrap">
                 <div className="flex items-center gap-3">
                   {voice.author.image ? (
                     <img
                       src={voice.author.image}
                       alt={voice.author.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-primary-300"
+                      className="w-12 h-12 rounded-none object-cover border-2 border-primary-500"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-primary-600 flex items-center justify-center border-2 border-primary-500">
                       <span className="text-white font-bold text-lg">
                         {voice.author.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div className="text-left">
-                    <p className="font-semibold text-white">{voice.author.name}</p>
+                    <p className="font-bold text-white uppercase tracking-wider">{voice.author.name}</p>
                     {voice.author.age && (
-                      <p className="text-sm">{voice.author.age} {language === 'tr' ? 'yaşında' : 'years old'}</p>
+                      <p className="text-sm text-white">{voice.author.age} {language === 'tr' ? 'yaşında' : 'years old'}</p>
                     )}
                   </div>
                 </div>
 
                 {voice.author.location.city && (
                   <div className="flex items-center gap-1">
-                    <span>📍</span>
-                    <span>
+                    <span className="text-primary-500">📍</span>
+                    <span className="font-medium">
                       {voice.author.location.city}
                       {voice.author.location.region && `, ${voice.author.location.region}`}
                       {voice.author.location.country && `, ${voice.author.location.country}`}
@@ -221,13 +221,13 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
                 )}
 
                 <div className="flex items-center gap-1">
-                  <span>📅</span>
-                  <span>{formatDate(voice.publishedAt)}</span>
+                  <span className="text-primary-500">📅</span>
+                  <span className="font-medium">{formatDate(voice.publishedAt)}</span>
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <span>⏱️</span>
-                  <span>{voice.readingTime} {language === 'tr' ? 'dk okuma' : 'min read'}</span>
+                  <span className="text-primary-500">⏱️</span>
+                  <span className="font-medium">{voice.readingTime} {language === 'tr' ? 'dk okuma' : 'min read'}</span>
                 </div>
               </div>
             </div>
@@ -238,53 +238,54 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
       {/* Featured Image */}
       {voice.featuredImage && (
         <section className="relative">
-          <div className="h-96 bg-gray-900 overflow-hidden">
+          <div className="h-96 bg-secondary-900 overflow-hidden relative">
             <img
               src={voice.featuredImage}
               alt={voice.title}
               className="w-full h-full object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
           </div>
         </section>
       )}
 
       {/* Article Content */}
-      <section className="section-padding bg-black">
+      <section className="section-padding bg-secondary-900">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto">
             <div className="prose prose-lg max-w-none prose-invert prose-primary">
               <div 
-                className="content text-accent-500"
+                className="content text-accent-500 prose-red"
                 dangerouslySetInnerHTML={{ __html: voice.content }}
                 style={{
-                  color: '#F39C12',
+                  color: '#ffffff',
                 }}
               />
             </div>
 
             {/* Author Bio */}
             {voice.author.bio && (
-              <div className="mt-12 p-6 bg-secondary-800 border-l-4 border-primary-500 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-white">
-                  {language === 'tr' ? 'Yazar Hakkında' : 'About the Author'}
+              <div className="mt-12 propaganda-box bg-secondary-800 border-l-4 border-primary-500 p-6 shadow-lg">
+                <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">
+                  {language === 'tr' ? 'YAZAR HAKKINDA' : 'ABOUT THE AUTHOR'}
                 </h3>
                 <div className="flex items-start gap-4">
                   {voice.author.image ? (
                     <img
                       src={voice.author.image}
                       alt={voice.author.name}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-primary-300"
+                      className="w-16 h-16 object-cover border-2 border-primary-500"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-primary-600 flex items-center justify-center border-2 border-primary-500">
                       <span className="text-white font-bold text-xl">
                         {voice.author.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div>
-                    <h4 className="font-semibold text-lg text-white">{voice.author.name}</h4>
-                    <p className="text-gray-300 mt-2">{voice.author.bio}</p>
+                    <h4 className="font-bold text-lg text-white uppercase tracking-wider">{voice.author.name}</h4>
+                    <p className="text-white mt-2">{voice.author.bio}</p>
                   </div>
                 </div>
               </div>
@@ -292,34 +293,34 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
 
             {/* Impact Section */}
             {voice.impact?.description && (
-              <div className="mt-12 p-6 bg-secondary-700 border-l-4 border-accent-500 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-accent-500">
-                  {language === 'tr' ? 'Etki ve Sonuçlar' : 'Impact & Results'}
+              <div className="mt-12 propaganda-box bg-secondary-700 border-l-4 border-accent-500 p-6 shadow-lg">
+                <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">
+                  {language === 'tr' ? 'ETKİ VE SONUÇLAR' : 'IMPACT & RESULTS'}
                 </h3>
-                <p className="text-gray-300 mb-4">{voice.impact.description}</p>
+                <p className="text-white mb-4">{voice.impact.description}</p>
 
                 {voice.impact.metrics && voice.impact.metrics.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     {voice.impact.metrics.map((metric, index) => (
-                      <div key={index} className="bg-secondary-900 p-4 text-center border border-secondary-600">
-                        <div className="text-2xl font-bold text-accent-500">
+                      <div key={index} className="propaganda-box bg-secondary-900 p-4 text-center border border-primary-500">
+                        <div className="text-2xl font-black text-primary-500 uppercase tracking-wider">
                           {metric.value} {metric.unit}
                         </div>
-                        <div className="text-sm text-gray-400">{metric.name}</div>
+                        <div className="text-sm text-white uppercase tracking-wide">{metric.name}</div>
                       </div>
                     ))}
                   </div>
                 )}
 
                 {voice.impact.beneficiaries && (
-                  <div className="mt-4 text-gray-300">
-                    <strong className="text-accent-500">{language === 'tr' ? 'Faydalanıcılar:' : 'Beneficiaries:'}</strong> {voice.impact.beneficiaries} {language === 'tr' ? 'kişi' : 'people'}
+                  <div className="mt-4 text-white">
+                    <strong className="text-white uppercase tracking-wider">{language === 'tr' ? 'FAYDALANıCıLAR:' : 'BENEFICIARIES:'}</strong> {voice.impact.beneficiaries} {language === 'tr' ? 'kişi' : 'people'}
                   </div>
                 )}
 
                 {voice.impact.timeframe && (
-                  <div className="mt-2 text-gray-300">
-                    <strong className="text-accent-500">{language === 'tr' ? 'Zaman Çerçevesi:' : 'Timeframe:'}</strong> {voice.impact.timeframe}
+                  <div className="mt-2 text-white">
+                    <strong className="text-white uppercase tracking-wider">{language === 'tr' ? 'ZAMAN ÇERÇEVESİ:' : 'TIMEFRAME:'}</strong> {voice.impact.timeframe}
                   </div>
                 )}
               </div>
@@ -327,19 +328,19 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
 
             {/* Call to Action */}
             {voice.callToAction && (
-              <div className="mt-12 p-6 bg-secondary-800 border-l-4 border-primary-500 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-primary-300">
-                  {language === 'tr' ? 'Harekete Geç' : 'Take Action'}
+              <div className="mt-12 propaganda-box bg-secondary-800 border-l-4 border-primary-500 p-6 shadow-lg">
+                <h3 className="text-xl font-bold mb-4 text-primary-500 uppercase tracking-wider">
+                  {language === 'tr' ? 'HAREKETE GEÇ' : 'TAKE ACTION'}
                 </h3>
-                <p className="text-gray-300">{voice.callToAction}</p>
+                <p className="text-white">{voice.callToAction}</p>
               </div>
             )}
 
             {/* Contact Info */}
             {voice.showAuthorContact && voice.contact && (
-              <div className="mt-12 p-6 bg-secondary-700 border border-secondary-600 shadow-lg">
-                <h3 className="text-xl font-bold mb-4 text-white">
-                  {language === 'tr' ? 'İletişim' : 'Contact'}
+              <div className="mt-12 propaganda-box bg-secondary-700 border border-primary-500 p-6 shadow-lg">
+                <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">
+                  {language === 'tr' ? 'İLETİŞİM' : 'CONTACT'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {voice.contact.email && (
@@ -392,12 +393,12 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
             {/* Tags */}
             {voice.tags.length > 0 && (
               <div className="mt-12">
-                <h3 className="text-lg font-semibold mb-4 text-white">
-                  {language === 'tr' ? 'Etiketler' : 'Tags'}
+                <h3 className="text-lg font-bold mb-4 text-white uppercase tracking-wider">
+                  {language === 'tr' ? 'ETİKETLER' : 'TAGS'}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {voice.tags.map((tag, index) => (
-                    <span key={index} className="bg-secondary-700 text-accent-500 px-3 py-1 border border-secondary-600 text-sm">
+                    <span key={index} className="propaganda-box bg-secondary-700 text-accent-500 px-3 py-1 border border-primary-500 text-sm uppercase tracking-wide">
                       #{tag.trim()}
                     </span>
                   ))}
@@ -406,9 +407,9 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
             )}
 
             {/* Social Share */}
-            <div className="mt-12 pt-8 border-t border-secondary-600">
-              <h3 className="text-lg font-semibold mb-4 text-white">
-                {language === 'tr' ? 'Paylaş' : 'Share'}
+            <div className="mt-12 pt-8 border-t border-primary-500">
+              <h3 className="text-lg font-bold mb-4 text-white uppercase tracking-wider">
+                {language === 'tr' ? 'PAYLAŞ' : 'SHARE'}
               </h3>
               <div className="flex gap-4">
                 <button
@@ -421,18 +422,18 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
                       });
                     }
                   }}
-                  className="bg-primary-600 text-white px-4 py-2 hover:bg-primary-700 transition-colors border border-primary-500"
+                  className="propaganda-box bg-primary-600 text-white px-4 py-2 hover:bg-primary-700 transition-colors border border-primary-500 uppercase tracking-wider font-bold"
                 >
-                  📤 {language === 'tr' ? 'Paylaş' : 'Share'}
+                  📤 {language === 'tr' ? 'PAYLAŞ' : 'SHARE'}
                 </button>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
                     alert(language === 'tr' ? 'Link kopyalandı!' : 'Link copied!');
                   }}
-                  className="bg-secondary-700 text-white px-4 py-2 hover:bg-secondary-600 transition-colors border border-secondary-600"
+                  className="propaganda-box bg-secondary-700 text-white px-4 py-2 hover:bg-secondary-600 transition-colors border border-primary-500 uppercase tracking-wider font-bold"
                 >
-                  📋 {language === 'tr' ? 'Linki Kopyala' : 'Copy Link'}
+                  📋 {language === 'tr' ? 'LİNKİ KOPYALA' : 'COPY LINK'}
                 </button>
               </div>
             </div>
@@ -445,8 +446,8 @@ const VoicePage: React.FC<VoicePageProps> = ({ voice, relatedVoices }) => {
         <section className="section-padding bg-secondary-700">
           <div className="container-custom">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-center mb-12 text-white">
-                {language === 'tr' ? 'İlgili Hikayeler' : 'Related Stories'}
+              <h2 className="font-montserrat font-black text-3xl text-center mb-12 text-white uppercase tracking-wider">
+                {language === 'tr' ? 'İLGİLİ HİKAYELER' : 'RELATED STORIES'}
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
