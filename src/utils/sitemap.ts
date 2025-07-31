@@ -12,7 +12,13 @@ export interface SitemapTriggerOptions {
  */
 export const triggerSitemapRegeneration = async (options: SitemapTriggerOptions) => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
+    // Production URL'ini kesinlikle zorla
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // Environment variable yoksa veya pages.dev içeriyorsa, production URL'ini zorla
+    if (!baseUrl || baseUrl.includes('pages.dev') || baseUrl.includes('localhost')) {
+      baseUrl = 'https://www.beyond2c.org';
+    }
     
     // Sitemap API'sini çağırarak yeniden oluşturmasını sağla
     const response = await fetch(`${baseUrl}/api/sitemap.xml`, {
@@ -40,7 +46,14 @@ export const triggerSitemapRegeneration = async (options: SitemapTriggerOptions)
  */
 export const notifySearchEngines = async () => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
+    // Production URL'ini kesinlikle zorla
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // Environment variable yoksa veya pages.dev içeriyorsa, production URL'ini zorla
+    if (!baseUrl || baseUrl.includes('pages.dev') || baseUrl.includes('localhost')) {
+      baseUrl = 'https://www.beyond2c.org';
+    }
+    
     const sitemapUrl = `${baseUrl}/api/sitemap.xml`;
 
     // Google'a ping gönder

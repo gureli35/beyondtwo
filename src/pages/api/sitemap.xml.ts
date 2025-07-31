@@ -29,7 +29,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
+    // Production URL'ini kesinlikle zorla
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // Request header'dan host bilgisini al
+    const host = req.headers.host;
+    
+    // Eğer custom domain üzerinden geliyorsa onu kullan
+    if (host && (host.includes('beyond2c.org') || host.includes('www.beyond2c.org'))) {
+      baseUrl = `https://${host}`;
+    }
+    // Environment variable yoksa veya pages.dev içeriyorsa, production URL'ini zorla
+    else if (!baseUrl || baseUrl.includes('pages.dev') || baseUrl.includes('localhost')) {
+      baseUrl = 'https://www.beyond2c.org';
+    }
+    
+    console.log('Sitemap using base URL:', baseUrl);
+    console.log('Request host:', host);
     const now = new Date().toISOString();
 
     const urls: SitemapUrl[] = [

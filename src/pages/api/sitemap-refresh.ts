@@ -9,7 +9,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.beyond2c.org';
+    // Production URL'ini kesinlikle zorla
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // Environment variable yoksa veya pages.dev içeriyorsa, production URL'ini zorla
+    if (!baseUrl || baseUrl.includes('pages.dev') || baseUrl.includes('localhost')) {
+      baseUrl = 'https://www.beyond2c.org';
+    }
     
     // Force regenerate sitemap by calling it with cache-busting
     const sitemapResponse = await axios.get(`${baseUrl}/api/sitemap.xml`, {
