@@ -1,7 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '@/lib/mongodb';
-import Post from '@/models/Post';
-import Voice from '@/models/Voice';
 import axios from 'axios';
 
 interface SitemapUrl {
@@ -32,8 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    await connectDB();
-
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://beyond2c.org';
     const now = new Date().toISOString();
 
@@ -101,43 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     ];
 
-    // Get published blog posts
-    const publishedPosts = await Post.find({ 
-      status: 'published' 
-    })
-    .select('slug updatedAt createdAt')
-    .sort({ updatedAt: -1 })
-    .lean();
-
-    // Add blog posts to sitemap
-    publishedPosts.forEach(post => {
-      urls.push({
-        loc: `${baseUrl}/blog/${post.slug}`,
-        lastmod: new Date(post.updatedAt || post.createdAt).toISOString(),
-        changefreq: 'weekly',
-        priority: 0.7
-      });
-    });
-
-    // Get published voices
-    const publishedVoices = await Voice.find({ 
-      status: 'published' 
-    })
-    .select('slug updatedAt submittedAt')
-    .sort({ updatedAt: -1 })
-    .lean();
-
-    // Add voices to sitemap
-    publishedVoices.forEach(voice => {
-      urls.push({
-        loc: `${baseUrl}/voices/${voice.slug}`,
-        lastmod: new Date(voice.updatedAt || voice.submittedAt).toISOString(),
-        changefreq: 'weekly',
-        priority: 0.6
-      });
-    });
-
-    // Get WordPress posts (Blog & Voices)
+    // Get WordPress posts (Blog & Voices) - Sadece WordPress'ten çek
     try {
       const wpApiUrl = process.env.WORDPRESS_API_URL || 'https://public-api.wordpress.com/rest/v1.1/sites/beyond2capi.wordpress.com/posts';
       
@@ -145,10 +104,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // WordPress.com Public API - fetch posts
       const wpResponse = await axios.get(wpApiUrl, {
-        timeout: 10000, // 10 saniye timeout
+        timeout: 5000, // 5 saniye timeout (kısaltıldı)
         params: {
-          number: 100, // WordPress.com API'da 'per_page' yerine 'number' kullanılır
-          fields: 'slug,modified,categories,tags,title' // WordPress.com API format
+          number: 50, // 50 post (azaltıldı)
+          fields: 'slug,modified,categories' // Sadece gerekli alanlar
         }
       });
 
