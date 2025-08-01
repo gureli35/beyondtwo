@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   
   // Enable static export for GitHub Pages/static hosting
-  output: 'export', // Enable static export for SEO-optimized static HTML
+  // output: 'export', // Temporarily disabled for development - re-enable for production build
   trailingSlash: true,
   // distDir: 'out', // Use default .next for server mode
   
