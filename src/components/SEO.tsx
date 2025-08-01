@@ -35,11 +35,13 @@ const SEO: React.FC<EnhancedSEOProps> = ({
   const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
   const fullImage = image.startsWith('http') ? image : `${baseUrl}${image}`;
 
-  // Default keywords for climate action website
+  // Default keywords for climate action website - English focused for better SEO
   const defaultKeywords = [
-    'iklim değişikliği', 'climate change', 'beyond2c', 'çevre koruma', 
-    'sürdürülebilirlik', 'iklim krizi', 'yeşil yaşam', 'çevre aktivizmi',
-    'iklim eylemi', 'climate action', 'environmental protection', 'sustainability'
+    'climate change', 'climate crisis', 'climate action', 'environmental activism',
+    'generation z', 'youth voices', 'policymakers', 'corporations',
+    'sustainability', 'environmental protection', 'beyond2c', 
+    'green living', 'eco-friendly', 'carbon footprint', 'renewable energy',
+    'global warming', 'paris agreement', '2 degrees celsius', 'net zero'
   ];
   
   const allKeywords = [...defaultKeywords, ...keywords].join(', ');

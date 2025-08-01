@@ -1,10 +1,77 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React from 'react';
+import { GetStaticProps, GetStaticPaths } from 'next';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { useLanguage } from '@/context/LanguageContext';
-import useWordPressPosts, { TransformedPost } from '@/hooks/useWordPressPosts';
+
+// WordPress post interfaces
+interface WordPressPost {
+  ID: number;
+  title: string;
+  excerpt: string;
+  content: string;
+  date: string;
+  modified: string;
+  author: {
+    name: string;
+  };
+  featured_image: string;
+  categories: {
+    [key: string]: {
+      ID: number;
+      name: string;
+      slug: string;
+      description: string;
+      post_count: number;
+      parent: number;
+      meta: any;
+    };
+  };
+  tags: {
+    [key: string]: {
+      ID: number;
+      name: string;
+      slug: string;
+      description: string;
+      post_count: number;
+      meta: any;
+    };
+  };
+  slug: string;
+  attachments?: {
+    [key: string]: {
+      ID: number;
+      URL: string;
+      guid: string;
+      mime_type: string;
+      width: number;
+      height: number;
+    };
+  };
+}
+
+export interface TransformedPost {
+  _id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: {
+    name: string;
+  };
+  publishedAt: string;
+  image: string;
+  featuredImage: string;
+  images: string[];
+  category: string;
+  tags: string[];
+  slug: string;
+}
+
+interface BlogPostPageProps {
+  post: TransformedPost;
+  relatedPosts: TransformedPost[];
+}
 
 // Helper function for consistent date formatting
 const formatDate = (dateString: string): string => {
@@ -15,61 +82,87 @@ const formatDate = (dateString: string): string => {
   return `${day}.${month}.${year}`;
 };
 
-const BlogPostPage: React.FC = () => {
-  const router = useRouter();
-  const { slug } = router.query;
-  const { t, language } = useLanguage();
-  const { posts, isLoading, error: postsError } = useWordPressPosts(); // Tüm yazıları çek, filtreleme slug arama sonrası yapılacak
-  const [post, setPost] = useState<TransformedPost | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<TransformedPost[]>([]);
+// Function to decode HTML entities
+function decodeHTMLEntities(text: string): string {
+  if (typeof window === 'undefined') {
+    // Server-side fallback
+    return text.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  }
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text.replace(/<[^>]*>/g, '');
+  return textarea.value;
+}
 
-  // Find the specific post and related posts
-  useEffect(() => {
-    if (!isLoading && posts.length > 0 && slug) {
-      const foundPost = posts.find(p => p.slug === slug);
-      
-      if (foundPost) {
-        setPost(foundPost);
-        
-        // Find related posts (same category, excluding current post)
-        const related = posts
-          .filter(p => p.category === foundPost.category && p._id !== foundPost._id)
-          .slice(0, 3); // Get up to 3 related posts
-        
-        setRelatedPosts(related);
-      } else {
-        setError('Blog yazısı bulunamadı');
-      }
+// Function to extract image URLs from HTML content
+function extractImagesFromContent(content: string): string[] {
+  const imgRegex = /<img[^>]+src="([^">]+)"/g;
+  const images: string[] = [];
+  let match;
+  
+  while ((match = imgRegex.exec(content)) !== null) {
+    if (match[1]) {
+      images.push(match[1]);
     }
-  }, [slug, posts, isLoading]);
+  }
+  
+  return images;
+}
 
-  if (isLoading) {
-    return (
-      <Layout
-        title={language === 'tr' ? 'Yükleniyor... - Beyond2C Blog' : 'Loading... - Beyond2C Blog'}
-        description={language === 'tr' ? 'Blog yazısı yükleniyor' : 'Loading blog post'}
-      >
-        <div className="min-h-screen bg-black">
-          <div className="max-w-4xl mx-auto px-4 py-20">
-            <div className="animate-pulse">
-              <div className="h-8 bg-secondary-900 rounded mb-4"></div>
-              <div className="h-4 bg-secondary-900 rounded mb-2 w-3/4"></div>
-              <div className="h-4 bg-secondary-900 rounded mb-8 w-1/2"></div>
-              <div className="h-64 bg-secondary-900 rounded mb-8"></div>
-              <div className="space-y-4">
-                <div className="h-4 bg-secondary-900 rounded"></div>
-                <div className="h-4 bg-secondary-900 rounded"></div>
-                <div className="h-4 bg-secondary-900 rounded w-5/6"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
+// Transform WordPress post to our format
+function transformWordPressPost(post: WordPressPost): TransformedPost {
+  const categoryNames = Object.values(post.categories || {}).map((cat) => cat.name);
+  const tagNames = Object.values(post.tags || {}).map((tag) => tag.name);
+  const images = extractImagesFromContent(post.content);
+  
+  let featuredImage = post.featured_image;
+  if (!featuredImage && post.attachments) {
+    const firstAttachment = Object.values(post.attachments)[0];
+    if (firstAttachment) {
+      featuredImage = firstAttachment.URL;
+    }
+  }
+  if (!featuredImage && images.length > 0) {
+    featuredImage = images[0];
+  }
+  if (!featuredImage) {
+    featuredImage = 'https://images.unsplash.com/photo-1569163139394-de4e4f43e4e5?w=800&h=400&fit=crop';
   }
 
-  if (error || postsError || !post) {
+  return {
+    _id: post.ID.toString(),
+    title: decodeHTMLEntities(post.title),
+    excerpt: decodeHTMLEntities(post.excerpt),
+    content: post.content,
+    author: post.author,
+    publishedAt: post.date,
+    image: featuredImage,
+    featuredImage,
+    images,
+    category: categoryNames[0] || 'General',
+    tags: tagNames,
+    slug: post.slug,
+  };
+}
+
+// Fetch all posts from WordPress API
+async function fetchAllPosts(): Promise<TransformedPost[]> {
+  try {
+    const response = await fetch('https://public-api.wordpress.com/rest/v1.1/sites/beyond2capi.wordpress.com/posts?number=100');
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts');
+    }
+    const data = await response.json();
+    return data.posts.map(transformWordPressPost);
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return [];
+  }
+}
+
+const BlogPostPage: React.FC<BlogPostPageProps> = ({ post, relatedPosts }) => {
+  const { t, language } = useLanguage();
+
+  if (!post) {
     return (
       <Layout
         title={language === 'tr' ? 'Blog Yazısı Bulunamadı - Beyond2C' : 'Blog Post Not Found - Beyond2C'}
@@ -79,14 +172,14 @@ const BlogPostPage: React.FC = () => {
           <div className="max-w-4xl mx-auto px-4 py-20 text-center">
             <div className="text-6xl mb-8">😕</div>
             <h1 className="text-3xl font-bold text-white mb-4">
-              {error || postsError || t('blog.postNotFound')}
+              {language === 'tr' ? 'Blog yazısı bulunamadı' : 'Blog post not found'}
             </h1>
             <p className="text-accent-500 mb-8">
-              {t('blog.postMayNotExist')}
+              {language === 'tr' ? 'Aradığınız blog yazısı mevcut değil veya kaldırılmış olabilir.' : 'The blog post you are looking for may not exist or has been removed.'}
             </p>
             <Link href="/blog">
               <Button variant="primary" size="large">
-                ← {t('blog.backToBlog')}
+                ← {language === 'tr' ? 'Blog\'a Dön' : 'Back to Blog'}
               </Button>
             </Link>
           </div>
@@ -95,15 +188,24 @@ const BlogPostPage: React.FC = () => {
     );
   }
 
+  // Create clean excerpt for meta description
+  const cleanExcerpt = post.excerpt ? 
+    decodeHTMLEntities(post.excerpt).substring(0, 160) : 
+    decodeHTMLEntities(post.content).substring(0, 160);
+
   return (
     <Layout 
-      title={post.title + ' - Beyond2C Blog'}
-      description={post.excerpt}
+      title={`${post.title} - Beyond2C Climate Action Blog`}
+      description={cleanExcerpt}
       keywords={post.tags}
       type="article"
       ogImage={post.featuredImage}
       locale={language === 'tr' ? 'tr_TR' : 'en_US'}
       url={`/blog/${post.slug}`}
+      author={post.author.name}
+      publishedTime={post.publishedAt}
+      section="Climate Action"
+      tags={post.tags}
     >
       <div className="min-h-screen bg-black pb-20">
         {/* Back Navigation */}
@@ -113,7 +215,7 @@ const BlogPostPage: React.FC = () => {
               href="/blog"
               className="inline-flex items-center text-primary-500 hover:text-accent-500 font-medium"
             >
-              ← {t('blog.backToBlog')}
+              ← {language === 'tr' ? 'Blog\'a Dön' : 'Back to Blog'}
             </Link>
           </div>
         </div>
@@ -153,106 +255,47 @@ const BlogPostPage: React.FC = () => {
 
           {/* Featured Image */}
           {post.featuredImage && (
-            <div className="mb-12">
-              <img
-                src={post.featuredImage}
-                alt={post.title}
-                className="w-full max-h-96 object-cover rounded-xl shadow-lg border-4 border-primary-500"
+            <div className="mb-8 rounded-lg overflow-hidden">
+              <img 
+                src={post.featuredImage} 
+                alt={post.title} 
+                className="w-full h-auto max-h-96 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://images.unsplash.com/photo-1569163139394-de4e4f43e4e5?w=800&h=400&fit=crop';
+                }}
               />
             </div>
           )}
 
-          {/* Excerpt */}
-          {post.excerpt && (
-            <div className="text-xl text-white leading-relaxed mb-8 p-6 bg-secondary-900 rounded-xl border-l-4 border-primary-500">
-              {post.excerpt}
-            </div>
-          )}
-
-          {/* Content */}
+          {/* Article Content */}
           <div 
-            className="prose prose-lg max-w-none text-accent-500 prose-headings:text-white prose-a:text-primary-500 prose-blockquote:border-primary-500 prose-strong:text-white"
+            className="prose prose-lg prose-invert max-w-none mb-12"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
 
-          {/* Image Gallery (if multiple images) */}
-          {post.images && post.images.length > 1 && (
-            <div className="mt-12 pt-8 border-t border-primary-500">
-              <h3 className="text-lg font-semibold text-white mb-4">{t('blog.imageGallery')}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {post.images.map((img, idx) => (
-                  <a 
-                    key={idx} 
-                    href={img} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="block overflow-hidden rounded-lg border-2 border-primary-500 hover:border-accent-500 transition-all"
-                  >
-                    <img 
-                      src={img} 
-                      alt={`${post.title} - ${idx + 1}`} 
-                      className="w-full h-48 object-cover transition-transform hover:scale-110"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-primary-500">
-              <h3 className="text-lg font-semibold text-white mb-4">{t('blog.tags')}</h3>
-              <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-secondary-900 hover:bg-primary-500 text-accent-500 hover:text-white px-3 py-1 rounded-full text-sm cursor-pointer transition-colors border border-primary-500"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {post.tags.map((tag: string, index: number) => (
+                <span 
+                  key={index}
+                  className="bg-secondary-800 text-accent-400 px-3 py-1 rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
           )}
-
-          {/* Social Share */}
-          <div className="mt-12 pt-8 border-t border-primary-500">
-            <h3 className="text-lg font-semibold text-white mb-4">{t('blog.sharePost')}</h3>
-            <div className="flex space-x-4">
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                🐦 Twitter
-              </a>
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                📘 Facebook
-              </a>
-              <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                💼 LinkedIn
-              </a>
-            </div>
-          </div>
 
           {/* Related Posts */}
           {relatedPosts.length > 0 && (
             <div className="mt-16 pt-8 border-t border-primary-500">
-              <h3 className="text-2xl font-bold text-white mb-6">{t('blog.relatedPosts')}</h3>
+              <h3 className="text-2xl font-bold text-white mb-6">
+                {language === 'tr' ? 'İlgili Yazılar' : 'Related Posts'}
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {relatedPosts.map(relatedPost => (
+                {relatedPosts.map((relatedPost: TransformedPost) => (
                   <Link 
                     key={relatedPost._id} 
                     href={`/blog/${relatedPost.slug}`}
@@ -282,6 +325,57 @@ const BlogPostPage: React.FC = () => {
       </div>
     </Layout>
   );
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  try {
+    const posts = await fetchAllPosts();
+    const paths = posts.map((post) => ({
+      params: { slug: post.slug }
+    }));
+
+    return {
+      paths,
+      fallback: false // Static export - generate all pages at build time
+    };
+  } catch (error) {
+    console.error('Error in getStaticPaths:', error);
+    return {
+      paths: [],
+      fallback: false
+    };
+  }
+};
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  try {
+    const posts = await fetchAllPosts();
+    const post = posts.find((p) => p.slug === params?.slug);
+
+    if (!post) {
+      return {
+        notFound: true,
+      };
+    }
+
+    // Find related posts (same category, excluding current post)
+    const relatedPosts = posts
+      .filter((p) => p.category === post.category && p._id !== post._id)
+      .slice(0, 3);
+
+    return {
+      props: {
+        post,
+        relatedPosts,
+      },
+      // revalidate: 3600, // Removed for static export
+    };
+  } catch (error) {
+    console.error('Error in getStaticProps:', error);
+    return {
+      notFound: true,
+    };
+  }
 };
 
 export default BlogPostPage; 

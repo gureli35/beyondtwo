@@ -26,7 +26,7 @@ interface LayoutProps extends ComponentProps {
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   title = "Beyond2C", 
-  description = "Guiding action beyond limits — before it's too late.",
+  description = "Beyond2C empowers Generation Z to drive urgent climate action by pressuring policymakers and corporations to prevent catastrophic global warming beyond 2 degrees Celsius.",
   keywords,
   image,
   ogImage,

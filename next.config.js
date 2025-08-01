@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // Node.js server configuration for cPanel hosting with API routes
-  // output: 'export', // Commented out to enable API routes
+  // Enable static export for GitHub Pages/static hosting
+  output: 'export', // Enable static export for SEO-optimized static HTML
   trailingSlash: true,
   // distDir: 'out', // Use default .next for server mode
   

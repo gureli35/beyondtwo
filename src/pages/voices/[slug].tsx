@@ -327,13 +327,13 @@ export const getStaticPaths: GetStaticPaths = async () => {
         params: { slug: post.slug }
       }));
 
-      return { paths, fallback: 'blocking' };
+      return { paths, fallback: false };
     }
 
-    return { paths: [], fallback: 'blocking' };
+    return { paths: [], fallback: false };
   } catch (error) {
     console.error('Error generating static paths:', error);
-    return { paths: [], fallback: 'blocking' };
+    return { paths: [], fallback: false };
   }
 };
 
@@ -439,7 +439,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
         voice,
         relatedVoices: relatedPosts,
       },
-      revalidate: 3600, // Revalidate every hour
+      // revalidate: 3600, // Removed for static export
     };
   } catch (error) {
     console.error('Error fetching voice:', error);
